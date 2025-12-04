@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  openmemory:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    environment:
+      # Core Configuration
+      - ENGRAMMA_PORT=${ENGRAMMA_PORT:-8080}
+      - ENGRAMMA_MODE=${ENGRAMMA_MODE:-standard}
+      - ENGRAMMA_TIER=${ENGRAMMA_TIER:-hybrid}
+      - ENGRAMMA_DB_PATH=${ENGRAMMA_DB_PATH:-/data/openmemory.sqlite}
+      - ENGRAMMA_API_KEY=${ENGRAMMA_API_KEY:-}
+      - OM_IDE_MODE=${OM_IDE_MODE:-false}
+      - OM_IDE_ALLOWED_ORIGINS=${OM_IDE_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+
+      # Rate Limiting
+      - ENGRAMMA_RATE_LIMIT_ENABLED=${ENGRAMMA_RATE_LIMIT_ENABLED:-false}
+      - ENGRAMMA_RATE_LIMIT_WINDOW_MS=${ENGRAMMA_RATE_LIMIT_WINDOW_MS:-60000}
+      - ENGRAMMA_RATE_LIMIT_MAX_REQUESTS=${ENGRAMMA_RATE_LIMIT_MAX_REQUESTS:-100}
+
+      # Compression
+      - ENGRAMMA_COMPRESSION_ENABLED=${ENGRAMMA_COMPRESSION_ENABLED:-false}
+      - OM_COMPRESSION_ALGORITHM=${OM_COMPRESSION_ALGORITHM:-auto}
+      - ENGRAMMA_COMPRESSION_MIN_LENGTH=${ENGRAMMA_COMPRESSION_MIN_LENGTH:-100}
+
+      # Embeddings Configuration
+      - ENGRAMMA_EMBEDDINGS=${ENGRAMMA_EMBEDDINGS:-synthetic}
+      - ENGRAMMA_EMBED_MODE=${ENGRAMMA_EMBED_MODE:-simple}
+      - ENGRAMMA_ADV_EMBED_PARALLEL=${ENGRAMMA_ADV_EMBED_PARALLEL:-false}
+      - ENGRAMMA_EMBED_DELAY_MS=${ENGRAMMA_EMBED_DELAY_MS:-200}
+      - ENGRAMMA_VEC_DIM=${ENGRAMMA_VEC_DIM:-256}
+
+      # OpenAI Provider
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OM_OPENAI_API_KEY=${OM_OPENAI_API_KEY:-}
+      - ENGRAMMA_OPENAI_BASE_URL=${ENGRAMMA_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - ENGRAMMA_OPENAI_MODEL=${ENGRAMMA_OPENAI_MODEL:-}
+
+      # Gemini Provider
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OM_GEMINI_API_KEY=${OM_GEMINI_API_KEY:-}
+
+      # Ollama Provider
+      - OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
+      - OM_OLLAMA_URL=${OM_OLLAMA_URL:-http://localhost:11434}
+
+      # Local Model
+      - LOCAL_MODEL_PATH=${LOCAL_MODEL_PATH:-}
+      - OM_LOCAL_MODEL_PATH=${OM_LOCAL_MODEL_PATH:-}
+
+      # Memory & Search
+      - OM_MIN_SCORE=${OM_MIN_SCORE:-0.3}
+      - ENGRAMMA_MAX_PAYLOAD_SIZE=${ENGRAMMA_MAX_PAYLOAD_SIZE:-1000000}
+
+      # LangGraph Configuration
+      - OM_LG_NAMESPACE=${OM_LG_NAMESPACE:-default}
+      - OM_LG_MAX_CONTEXT=${OM_LG_MAX_CONTEXT:-50}
+      - OM_LG_REFLECTIVE=${OM_LG_REFLECTIVE:-true}
+
+      # Metadata Backend (SQLite/PostgreSQL)
+      - OM_METADATA_BACKEND=${OM_METADATA_BACKEND:-sqlite}
+      - OM_PG_HOST=${OM_PG_HOST:-}
+      - OM_PG_PORT=${OM_PG_PORT:-5432}
+      - OM_PG_DB=${OM_PG_DB:-}
+      - OM_PG_USER=${OM_PG_USER:-}
+      - OM_PG_PASSWORD=${OM_PG_PASSWORD:-}
+      - OM_PG_SCHEMA=${OM_PG_SCHEMA:-public}
+      - OM_PG_TABLE=${OM_PG_TABLE:-openmemory_memories}
+      - OM_PG_SSL=${OM_PG_SSL:-disable}
+
+      # Vector Backend (SQLite/Weaviate)
+      - OM_VECTOR_BACKEND=${OM_VECTOR_BACKEND:-sqlite}
+      - OM_VECTOR_TABLE=${OM_VECTOR_TABLE:-openmemory_vectors}
+      - OM_WEAVIATE_URL=${OM_WEAVIATE_URL:-}
+      - OM_WEAVIATE_API_KEY=${OM_WEAVIATE_API_KEY:-}
+      - OM_WEAVIATE_CLASS=${OM_WEAVIATE_CLASS:-OpenMemory}
+
+      # Auto Reflection
+      - ENGRAMMA_AUTO_REFLECT=${ENGRAMMA_AUTO_REFLECT:-false}
+      - ENGRAMMA_REFLECT_INTERVAL=${ENGRAMMA_REFLECT_INTERVAL:-10}
+      - ENGRAMMA_REFLECT_MIN_MEMORIES=${ENGRAMMA_REFLECT_MIN_MEMORIES:-20}
+
+      # User Summaries
+      - OM_USER_SUMMARY_INTERVAL=${OM_USER_SUMMARY_INTERVAL:-30}
+      - ENGRAMMA_USE_SUMMARY_ONLY=${ENGRAMMA_USE_SUMMARY_ONLY:-true}
+      - ENGRAMMA_SUMMARY_MAX_LENGTH=${ENGRAMMA_SUMMARY_MAX_LENGTH:-200}
+
+      # HSG Configuration
+      - ENGRAMMA_SEG_SIZE=${ENGRAMMA_SEG_SIZE:-10000}
+      - ENGRAMMA_CACHE_SEGMENTS=${ENGRAMMA_CACHE_SEGMENTS:-3}
+      - ENGRAMMA_MAX_ACTIVE=${ENGRAMMA_MAX_ACTIVE:-64}
+
+      # Decay System
+      - OM_DECAY_LAMBDA=${OM_DECAY_LAMBDA:-0.02}
+      - ENGRAMMA_DECAY_INTERVAL_MINUTES=${ENGRAMMA_DECAY_INTERVAL_MINUTES:-1440}
+      - OM_DECAY_RATIO=${OM_DECAY_RATIO:-0.03}
+      - OM_DECAY_SLEEP_MS=${OM_DECAY_SLEEP_MS:-200}
+      - ENGRAMMA_DECAY_THREADS=${ENGRAMMA_DECAY_THREADS:-3}
+      - ENGRAMMA_DECAY_COLD_THRESHOLD=${ENGRAMMA_DECAY_COLD_THRESHOLD:-0.25}
+      - ENGRAMMA_DECAY_REINFORCE_ON_QUERY=${ENGRAMMA_DECAY_REINFORCE_ON_QUERY:-true}
+
+      # Compression & Regeneration
+      - ENGRAMMA_REGENERATION_ENABLED=${ENGRAMMA_REGENERATION_ENABLED:-true}
+      - OM_MAX_VECTOR_DIM=${OM_MAX_VECTOR_DIM:-256}
+      - OM_MIN_VECTOR_DIM=${OM_MIN_VECTOR_DIM:-64}
+      - OM_SUMMARY_LAYERS=${OM_SUMMARY_LAYERS:-3}
+
+      # Keyword Extraction
+      - ENGRAMMA_KEYWORD_BOOST=${ENGRAMMA_KEYWORD_BOOST:-2.5}
+      - ENGRAMMA_KEYWORD_MIN_LENGTH=${ENGRAMMA_KEYWORD_MIN_LENGTH:-3}
+    volumes:
+      - openmemory_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  openmemory_data:
+    driver: local

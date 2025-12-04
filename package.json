@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@nestjs/mapped-types": "*",
+    "framer-motion": "^12.23.25",
+    "lucide-react": "^0.555.0"
+  },
+  "name": "openmemory",
+  "private": true,
+  "scripts": {
+    "install": "cd backend && npm install",
+    "build": "cd backend && npm run build",
+    "start": "cd backend && npm start"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5"
+  }
+}

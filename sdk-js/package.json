@@ -1,0 +1,40 @@
+{
+    "name": "openmemory-js",
+    "version": "0.3.0",
+    "description": "JavaScript SDK for OpenMemory - Long term AI memory system",
+    "main": "dist/index.js",
+    "module": "dist/index.esm.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "rollup -c",
+        "dev": "rollup -c -w",
+        "test": "jest",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "memory",
+        "ai",
+        "vector-search",
+        "brain-inspired",
+        "embeddings",
+        "semantic-search"
+    ],
+    "author": "nullure",
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.5",
+        "@types/jest": "^29.5.8",
+        "jest": "^29.7.0",
+        "rollup": "^4.52.5",
+        "tslib": "^2.6.2",
+        "typescript": "^5.3.2"
+    },
+    "files": [
+        "dist/"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/caviraoss/openmemory.git",
+        "directory": "sdk-js"
+    }
+}
