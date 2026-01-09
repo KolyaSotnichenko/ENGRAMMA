@@ -92,6 +92,26 @@ export class SqliteService {
         created_at integer,
         updated_at integer
       )`);
+      this.db.run(`create table if not exists auth_users(
+        id text primary key,
+        login text not null unique,
+        password_hash text not null,
+        created_at integer not null,
+        updated_at integer not null
+      )`);
+      this.db.run(`create table if not exists auth_sessions(
+        id text primary key,
+        user_id text not null,
+        token_hash text not null unique,
+        created_at integer not null,
+        expires_at integer not null
+      )`);
+      this.db.run(
+        `create index if not exists idx_auth_users_login on auth_users(login)`,
+      );
+      this.db.run(
+        `create index if not exists idx_auth_sessions_expires on auth_sessions(expires_at)`,
+      );
       this.db.run(`create table if not exists temporal_facts(
         id text primary key,
         subject text not null,
@@ -211,10 +231,47 @@ export class SqliteService {
         model text,
         status text,
         ts integer,
-        err text
+        err text,
+        op text,
+        provider text,
+        duration_ms integer,
+        input_len integer,
+        output_dim integer,
+        status_code integer,
+        memory_id text
       )`);
       this.db.run(
         `create index if not exists idx_embed_logs_ts on embed_logs(ts)`,
+      );
+      this.db.all(
+        `PRAGMA table_info(embed_logs)`,
+        [],
+        (err: Error | null, rows: Array<{ name: string }>) => {
+          if (err) return;
+          const names = new Set(rows.map((r) => String(r.name)));
+          const add = (name: string, stmt: string) => {
+            if (!names.has(name)) this.db.run(stmt);
+          };
+          add('op', `alter table embed_logs add column op text`);
+          add('provider', `alter table embed_logs add column provider text`);
+          add(
+            'duration_ms',
+            `alter table embed_logs add column duration_ms integer`,
+          );
+          add(
+            'input_len',
+            `alter table embed_logs add column input_len integer`,
+          );
+          add(
+            'output_dim',
+            `alter table embed_logs add column output_dim integer`,
+          );
+          add(
+            'status_code',
+            `alter table embed_logs add column status_code integer`,
+          );
+          add('memory_id', `alter table embed_logs add column memory_id text`);
+        },
       );
       this.migrateWaypointsPK();
     });

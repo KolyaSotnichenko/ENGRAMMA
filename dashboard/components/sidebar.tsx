@@ -140,9 +140,24 @@ export default function Sidebar() {
       label: 'Docs',
       path: '/docs',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h8.25A2.25 2.25 0 0 1 16.5 6.75v12.75A2.25 2.25 0 0 1 14.25 21H6a2.25 2.25 0 0 1-2.25-2.25V6.75Z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25h4.5M9 11.25h4.5M9 14.25h3" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h8.25A2.25 2.25 0 0 1 16.5 6.75v12.75A2.25 2.25 0 0 1 14.25 21H6a2.25 2.25 0 0 1-2.25-2.25V6.75Z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 8.25h4.5M9 11.25h4.5M9 14.25h3"
+          />
         </svg>
       ),
     },
@@ -154,7 +169,7 @@ export default function Sidebar() {
         {/* <div className="flex items-center gap-1 px-2">
           <div className="relative group">
             <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-stone-800 text-stone-200 px-2 py-1 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              AuthfyMemory
+              Engramma
             </span>
             <Link href="/" className="block">
               <Image

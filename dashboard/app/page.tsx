@@ -11,7 +11,6 @@ import {
   Legend,
 } from 'chart.js';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 import {
   Brain,
   Cpu,
@@ -20,6 +19,9 @@ import {
   Server,
   Zap,
   AlertCircle,
+  Activity,
+  ArrowUpRight,
+  Layers,
 } from 'lucide-react';
 import { API_BASE_URL, getHeaders } from '@/lib/api';
 import { HealthMetric } from '@/components/dashboard/HealthMetric';
@@ -40,6 +42,7 @@ export default function Dashboard() {
   const [qpsData, setQpsData] = useState<any[]>([]);
   const [healthMetrics, setHealthMetrics] = useState<any>({});
   const [logs, setLogs] = useState<any[]>([]);
+  const [logFilter, setLogFilter] = useState('all');
   const [embedLogs, setEmbedLogs] = useState<any[]>([]);
   const [timePeriod, setTimePeriod] = useState('today');
   const [qpsStats, setQpsStats] = useState<any>({});
@@ -165,6 +168,11 @@ export default function Dashboard() {
             }),
             model: e.model,
             status: e.status,
+            op: e.op || '',
+            provider: e.provider || '',
+            dur: e.duration_ms ?? 0,
+            dim: e.output_dim ?? 0,
+            code: e.status_code ?? '',
             err: e.err || '',
           })),
         );
@@ -286,21 +294,37 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 font-sans max-w-7xl mx-auto pb-20">
+      {/* Header Section */}
+      <div className="flex flex-col gap-1 pt-6">
+        <h1 className="text-4xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white via-stone-200 to-stone-500">
+          Overview
+        </h1>
+        <p className="text-stone-400 text-lg">
+          Real-time monitoring of neural architecture and memory systems.
+        </p>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center justify-between border-b border-white/5 pb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-stone-200">Overview</h2>
+          <div className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </div>
+          <span className="text-sm font-medium text-stone-300">
+            System Operational
+          </span>
         </div>
-        <div className="flex bg-stone-900/50 p-1 rounded-lg border border-stone-800/50">
+        <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 backdrop-blur-sm">
           {timePeriods.map((period) => (
             <button
               key={period.value}
               onClick={() => setTimePeriod(period.value)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 ${
                 timePeriod === period.value
-                  ? 'bg-stone-800 text-stone-200 shadow-sm'
-                  : 'text-stone-500 hover:text-stone-300 hover:bg-stone-800/30'
+                  ? 'bg-stone-800 text-white shadow-lg shadow-stone-900/50'
+                  : 'text-stone-500 hover:text-stone-300 hover:bg-white/5'
               }`}
             >
               {period.label}
@@ -309,107 +333,131 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
+      {/* Primary Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: 'Total Memories',
             value: healthMetrics.totalMemories?.toLocaleString() || '0',
+            subValue: `+${healthMetrics.recentMemories || 0} recent`,
             icon: Database,
-            color: 'text-blue-400',
-            bg: 'bg-blue-500/5',
-            border: 'border-blue-500/10',
+            gradient: 'from-blue-500/20 to-indigo-500/5',
+            border: 'border-blue-500/20',
+            iconColor: 'text-blue-400',
           },
           {
-            label: 'Recent (24h)',
-            value: healthMetrics.recentMemories || '0',
-            icon: Clock,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-500/5',
-            border: 'border-emerald-500/10',
-          },
-          {
-            label: 'Avg Salience',
-            value: (healthMetrics.avgSalience || 0).toFixed(2),
-            icon: Brain,
-            color: 'text-purple-400',
-            bg: 'bg-purple-500/5',
-            border: 'border-purple-500/10',
-          },
-          {
-            label: 'API Requests',
+            label: 'Request Volume',
             value: (healthMetrics.totalRequests || 0).toLocaleString(),
+            subValue: `${healthMetrics.errorRate || '0.0'}% error rate`,
             icon: Zap,
-            color: 'text-amber-400',
-            bg: 'bg-amber-500/5',
-            border: 'border-amber-500/10',
+            gradient: 'from-amber-500/20 to-orange-500/5',
+            border: 'border-amber-500/20',
+            iconColor: 'text-amber-400',
           },
           {
-            label: 'Errors',
-            value: healthMetrics.errors || '0',
-            icon: AlertCircle,
-            color:
-              healthMetrics.errors > 10 ? 'text-red-400' : 'text-stone-400',
-            bg: healthMetrics.errors > 10 ? 'bg-red-500/5' : 'bg-stone-500/5',
-            border:
-              healthMetrics.errors > 10
-                ? 'border-red-500/10'
-                : 'border-stone-500/10',
+            label: 'System Health',
+            value: `${(
+              100 - parseFloat(healthMetrics.errorRate || '0')
+            ).toFixed(1)}%`,
+            subValue: `Uptime: ${systemHealth.uptimeDays || 0}d`,
+            icon: Activity,
+            gradient: 'from-emerald-500/20 to-teal-500/5',
+            border: 'border-emerald-500/20',
+            iconColor: 'text-emerald-400',
           },
           {
-            label: 'Memory Usage',
+            label: 'Cognitive Load',
+            value: `${(healthMetrics.avgSalience || 0).toFixed(2)}`,
+            subValue: 'Avg Salience Score',
+            icon: Brain,
+            gradient: 'from-purple-500/20 to-pink-500/5',
+            border: 'border-purple-500/20',
+            iconColor: 'text-purple-400',
+          },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className={`relative overflow-hidden rounded-3xl border ${stat.border} bg-stone-900/20 backdrop-blur-sm p-6 transition-all duration-300 hover:scale-[1.02] hover:bg-stone-900/40 group`}
+          >
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+            />
+            <div className="relative flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-stone-400">
+                  {stat.label}
+                </p>
+                <h3 className="text-3xl font-bold text-white mt-2 tracking-tight">
+                  {stat.value}
+                </h3>
+                <p className="text-xs text-stone-500 mt-1 font-medium">
+                  {stat.subValue}
+                </p>
+              </div>
+              <div
+                className={`p-3 rounded-2xl bg-white/5 border border-white/5 ${stat.iconColor}`}
+              >
+                <stat.icon className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Secondary Details Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {[
+          {
+            label: 'Heap Usage',
             value: `${systemHealth.heapUsed || 0}MB`,
             icon: Cpu,
             color: 'text-cyan-400',
-            bg: 'bg-cyan-500/5',
-            border: 'border-cyan-500/10',
           },
           {
-            label: 'Uptime',
-            value: `${systemHealth.uptimeDays || 0}d`,
-            icon: Server,
+            label: 'Compression',
+            value: `${healthMetrics.compressionRatio || 0}%`,
+            icon: Layers,
+            color: 'text-orange-400',
+          },
+          {
+            label: 'Vector Dim',
+            value: healthMetrics.avgVecDim || 0,
+            icon: ArrowUpRight,
             color: 'text-indigo-400',
-            bg: 'bg-indigo-500/5',
-            border: 'border-indigo-500/10',
           },
           {
-            label: 'Compression Ratio',
-            value: `${healthMetrics.compressionRatio || 0}% (${
-              healthMetrics.avgVecDim || 0
-            }/${healthMetrics.baseVecDim || 0})`,
-            icon: Cpu,
-            color: 'text-amber-400',
-            bg: 'bg-amber-500/5',
-            border: 'border-amber-500/10',
-          },
-          {
-            label: 'Compression Coverage',
-            value: `${healthMetrics.compressionCoverage || 0}% (${(
-              healthMetrics.compressedCount || 0
-            ).toLocaleString()})`,
+            label: 'Coverage',
+            value: `${healthMetrics.compressionCoverage || 0}%`,
             icon: Database,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-500/5',
-            border: 'border-emerald-500/10',
+            color: 'text-teal-400',
           },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className={`p-4 rounded-xl border ${stat.border} ${stat.bg} hover:bg-opacity-10 transition-colors bg-opacity-20`}
+          {
+            label: 'Errors',
+            value: healthMetrics.errors || 0,
+            icon: AlertCircle,
+            color: 'text-red-400',
+          },
+          {
+            label: 'RSS',
+            value: `${Math.round((systemHealth.rss || 0) / 1024 / 1024)}MB`,
+            icon: Server,
+            color: 'text-pink-400',
+          },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="flex flex-col p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"
           >
             <div className="flex items-center gap-2 mb-2">
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
-                {stat.label}
+              <item.icon className={`w-4 h-4 ${item.color}`} />
+              <span className="text-xs font-medium text-stone-500">
+                {item.label}
               </span>
             </div>
-            <div className="text-xl font-bold text-stone-200 font-mono">
-              {stat.value}
-            </div>
-          </motion.div>
+            <span className="text-lg font-semibold text-stone-200">
+              {item.value}
+            </span>
+          </div>
         ))}
       </div>
 
@@ -806,320 +854,405 @@ export default function Dashboard() {
               }}
             />
           </div>
-          <div className="flex flex-wrap gap-3 text-xs text-[#8a8a8a] mt-4 pt-4 border-t border-[#27272a] hover:border-zinc-600 transition-colors duration-200">
-            {[
-              { label: 'decay', color: '#22c55e' },
-              { label: 'hot', color: '#f87171' },
-              { label: 'warm', color: '#fbbf24' },
-              { label: 'cold', color: '#60a5fa' },
-              { label: 'prune_weak', color: '#f43f5e' },
-              { label: 'prune_old', color: '#ea580c' },
-              { label: 'prune_dense', color: '#3b82f6' },
-              { label: 'compression', color: '#eab308' },
-              { label: 'fingerprint', color: '#6366f1' },
-              { label: 'regeneration', color: '#2dd4bf' },
-              { label: 'reinforce', color: '#a855f7' },
-              { label: 'reflections', color: '#60a5fa' },
-              { label: 'consolidations', color: '#c084fc' },
-            ].map((i) => (
-              <div key={i.label} className="flex items-center gap-1">
-                <div
-                  className="w-3 h-3 rounded"
-                  style={{ backgroundColor: i.color }}
-                />
-                {i.label}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            {/* Activity & Efficiency */}
+            <div className="p-4 rounded-xl bg-stone-900/30 border border-white/5">
+              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Activity className="w-3 h-3" /> Activity
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Cycles</span>
+                  <span className="text-stone-200 font-mono font-medium">
+                    {maintenanceStats.cycles || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Efficiency</span>
+                  <span className="text-emerald-400 font-mono font-bold">
+                    {maintenanceStats.efficiency || 0}%
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-12 gap-2 mt-4">
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Cycles</p>
-              <p className="text-lg font-bold text-[#f4f4f5]">
-                {maintenanceStats.cycles || 0}
-              </p>
             </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Hot</p>
-              <p className="text-lg font-bold text-[#f87171]">
-                {maintenanceStats.cycles_by_tier?.hot || 0}
-              </p>
+
+            {/* Tier Decay */}
+            <div className="p-4 rounded-xl bg-stone-900/30 border border-white/5">
+              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Clock className="w-3 h-3" /> Decay Ops
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Hot Tier</span>
+                  <span className="text-red-400 font-mono">
+                    {maintenanceStats.cycles_by_tier?.hot || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Warm Tier</span>
+                  <span className="text-amber-400 font-mono">
+                    {maintenanceStats.cycles_by_tier?.warm || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Cold Tier</span>
+                  <span className="text-blue-400 font-mono">
+                    {maintenanceStats.cycles_by_tier?.cold || 0}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Warm</p>
-              <p className="text-lg font-bold text-[#fbbf24]">
-                {maintenanceStats.cycles_by_tier?.warm || 0}
-              </p>
+
+            {/* Pruning Stats */}
+            <div className="p-4 rounded-xl bg-stone-900/30 border border-white/5">
+              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <AlertCircle className="w-3 h-3" /> Pruning
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Weak</span>
+                  <span className="text-rose-400 font-mono">
+                    {maintenanceStats.prunes?.weak || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Old</span>
+                  <span className="text-orange-400 font-mono">
+                    {maintenanceStats.prunes?.old || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-stone-500">Dense</span>
+                  <span className="text-blue-500 font-mono">
+                    {maintenanceStats.prunes?.dense || 0}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Cold</p>
-              <p className="text-lg font-bold text-[#60a5fa]">
-                {maintenanceStats.cycles_by_tier?.cold || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Prune Weak</p>
-              <p className="text-lg font-bold text-[#f43f5e]">
-                {maintenanceStats.prunes?.weak || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Prune Old</p>
-              <p className="text-lg font-bold text-[#ea580c]">
-                {maintenanceStats.prunes?.old || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Prune Dense</p>
-              <p className="text-lg font-bold text-[#3b82f6]">
-                {maintenanceStats.prunes?.dense || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Compression</p>
-              <p className="text-lg font-bold text-[#eab308]">
-                {maintenanceStats.compression || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Fingerprint</p>
-              <p className="text-lg font-bold text-[#6366f1]">
-                {maintenanceStats.fingerprints || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Regeneration</p>
-              <p className="text-lg font-bold text-[#2dd4bf]">
-                {maintenanceStats.regenerations || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center">
-              <p className="text-xs text-[#8a8a8a] mb-1">Reinforce</p>
-              <p className="text-lg font-bold text-[#a855f7]">
-                {maintenanceStats.reinforcements || 0}
-              </p>
-            </div>
-            <div className="bg-transparent rounded p-2 border border-[#27272a] text-center col-span-12 lg:col-span-3">
-              <p className="text-xs text-[#8a8a8a] mb-1">Efficiency</p>
-              <p className="text-lg font-bold text-[#22c55e]">
-                {maintenanceStats.efficiency || 0}%
-              </p>
+
+            {/* Optimization */}
+            <div className="p-4 rounded-xl bg-stone-900/30 border border-white/5">
+              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Zap className="w-3 h-3" /> Optimization
+              </h3>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div>
+                  <div className="text-[10px] text-stone-500">Compress</div>
+                  <div className="text-yellow-400 font-mono">
+                    {maintenanceStats.compression || 0}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-stone-500">Fingerprint</div>
+                  <div className="text-indigo-400 font-mono">
+                    {maintenanceStats.fingerprints || 0}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-stone-500">Regen</div>
+                  <div className="text-teal-400 font-mono">
+                    {maintenanceStats.regenerations || 0}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-stone-500">Reinforce</div>
+                  <div className="text-purple-400 font-mono">
+                    {maintenanceStats.reinforcements || 0}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {}
-      <div className="mb-6 bg-transparent rounded-xl p-6 border border-[#27272a] hover:border-zinc-600 transition-colors duration-200  transition-all duration-300">
-        <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">
-          System Health
-        </h2>
-        <div className="grid grid-cols-3 gap-6">
-          <div className="space-y-4">
-            <HealthMetric
-              label="Memory Usage"
-              value={systemHealth.memoryUsage || 0}
-            />
+      {/* System Health Section */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Memory Resources */}
+        <div className="p-5 rounded-xl bg-stone-900/30 border border-white/5 backdrop-blur-sm hover:bg-stone-900/40 transition-colors">
+          <h3 className="text-sm font-semibold text-stone-300 mb-4 flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-cyan-400" /> Memory Resources
+          </h3>
+          <div className="flex flex-col gap-4">
+            {/* Progress Bar for Heap */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-stone-500">Heap Usage</span>
+                <span className="text-stone-300">
+                  {systemHealth.memoryUsage || 0}%
+                </span>
+              </div>
+              <div className="h-2 w-full bg-stone-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+                  style={{ width: `${systemHealth.memoryUsage || 0}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-2 rounded-lg bg-black/20">
+                <div className="text-stone-500 mb-1">Heap Used</div>
+                <div className="text-stone-200 font-mono">
+                  {systemHealth.heapUsed || 0} MB
+                </div>
+              </div>
+              <div className="p-2 rounded-lg bg-black/20">
+                <div className="text-stone-500 mb-1">Total</div>
+                <div className="text-stone-200 font-mono">
+                  {systemHealth.heapTotal || 0} MB
+                </div>
+              </div>
+              <div className="p-2 rounded-lg bg-black/20">
+                <div className="text-stone-500 mb-1">RSS</div>
+                <div className="text-stone-200 font-mono">
+                  {systemHealth.rss || 0} MB
+                </div>
+              </div>
+              <div className="p-2 rounded-lg bg-black/20">
+                <div className="text-stone-500 mb-1">External</div>
+                <div className="text-stone-200 font-mono">
+                  {systemHealth.external || 0} MB
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="space-y-2 text-sm text-[#8a8a8a]">
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Heap Used</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.heapUsed || 0} MB
+        </div>
+
+        {/* Vector Cache */}
+        <div className="p-5 rounded-xl bg-stone-900/30 border border-white/5 backdrop-blur-sm hover:bg-stone-900/40 transition-colors">
+          <h3 className="text-sm font-semibold text-stone-300 mb-4 flex items-center gap-2">
+            <Database className="w-4 h-4 text-emerald-400" /> Vector Cache
+          </h3>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <span className="text-xs text-emerald-300 font-medium">
+                Hit Rate
               </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Heap Total</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.heapTotal || 0} MB
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>RSS Memory</span>
-              <span className="text-[#e6e6e6]">{systemHealth.rss || 0} MB</span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>External Memory</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.external || 0} MB
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Uptime</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.uptimeDays || 0}d {systemHealth.uptimeHours || 0}h
-              </span>
-            </div>
-          </div>
-          <div className="space-y-2 text-sm text-[#8a8a8a]">
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Active Segments</span>
-              <span className="text-[#e6e6e6]">
-                ✓ {systemHealth.activeSegments || 0}
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Max Active</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.maxActive || 0}
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache Hit Rate</span>
-              <span className="text-[#22c55e]">
+              <span className="text-xl font-bold text-emerald-400">
                 {systemHealth.vecHitRate || 0}%
               </span>
             </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache Hits</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.vecHits || 0}
-              </span>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-stone-500 border-b border-white/5 pb-2">
+                <span>Hits / Misses</span>
+                <span className="text-stone-300 font-mono">
+                  {systemHealth.vecHits || 0} / {systemHealth.vecMisses || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs text-stone-500 border-b border-white/5 pb-2">
+                <span>Entries</span>
+                <span className="text-stone-300 font-mono">
+                  {systemHealth.vecSize || 0} / {systemHealth.vecMax || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs text-stone-500 border-b border-white/5 pb-2">
+                <span>Evictions</span>
+                <span className="text-amber-400 font-mono">
+                  {systemHealth.vecEvictions || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs text-stone-500 pt-1">
+                <span>TTL</span>
+                <span className="text-stone-300 font-mono">
+                  {Math.round((systemHealth.vecTTL || 0) / 1000)}s
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache Misses</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.vecMisses || 0}
-              </span>
+          </div>
+        </div>
+
+        {/* System Info */}
+        <div className="p-5 rounded-xl bg-stone-900/30 border border-white/5 backdrop-blur-sm hover:bg-stone-900/40 transition-colors">
+          <h3 className="text-sm font-semibold text-stone-300 mb-4 flex items-center gap-2">
+            <Server className="w-4 h-4 text-indigo-400" /> Environment
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-indigo-500/10">
+                <Clock className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <div className="text-[10px] text-stone-500 uppercase tracking-wider">
+                  Uptime
+                </div>
+                <div className="text-sm font-medium text-stone-200">
+                  {systemHealth.uptimeDays || 0}d {systemHealth.uptimeHours || 0}
+                  h
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache Entries</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.vecSize || 0}
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache Evictions</span>
-              <span className="text-[#e6e6e6]">
-                {systemHealth.vecEvictions || 0}
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache TTL</span>
-              <span className="text-[#e6e6e6]">
-                {Math.round((systemHealth.vecTTL || 0) / 1000)}s
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Vec Cache Max</span>
-              <span className="text-[#e6e6e6]">{systemHealth.vecMax || 0}</span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Node Version</span>
-              <span className="text-[#22c55e]">
-                ✓ {backendHealth.process?.version || 'N/A'}
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Platform</span>
-              <span className="text-[#e6e6e6]">
-                {backendHealth.process?.platform || 'N/A'}
-              </span>
-            </div>
-            <div className="flex justify-between border-b border-[#27272a] pb-2">
-              <span>Process ID</span>
-              <span className="text-[#e6e6e6]">
-                {backendHealth.process?.pid || 'N/A'}
-              </span>
+
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+              <div>
+                <div className="text-[10px] text-stone-500 mb-1">Platform</div>
+                <div className="text-xs text-stone-300 bg-black/20 px-2 py-1 rounded border border-white/5">
+                  {backendHealth.process?.platform || 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] text-stone-500 mb-1">
+                  Node Version
+                </div>
+                <div className="text-xs text-stone-300 bg-black/20 px-2 py-1 rounded border border-white/5">
+                  {backendHealth.process?.version || 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] text-stone-500 mb-1">PID</div>
+                <div className="text-xs text-stone-300 bg-black/20 px-2 py-1 rounded border border-white/5 font-mono">
+                  {backendHealth.process?.pid || 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] text-stone-500 mb-1">Status</div>
+                <div className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        {}
-        <div className="bg-transparent rounded-xl p-6 border border-[#27272a] hover:border-zinc-600 transition-colors duration-200  transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#f4f4f5]">
-              Memory & System Logs
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Memory & System Logs */}
+        <div className="bg-stone-900/30 rounded-xl border border-white/5 backdrop-blur-sm overflow-hidden flex flex-col h-[500px]">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+            <h2 className="text-sm font-semibold text-stone-200 flex items-center gap-2">
+              <Database className="w-4 h-4 text-stone-400" />
+              Memory Logs
             </h2>
-            <div className="flex gap-2">
-              <select className="rounded-xl p-2 pl-4 border border-stone-800 bg-stone-950 hover:bg-stone-900/50 hover:text-stone-300 text-sm font-medium text-stone-400 outline-none cursor-pointer transition-colors">
-                <option className="bg-stone-950">All Levels</option>
-                <option className="bg-stone-950">Info</option>
-                <option className="bg-stone-950">Warning</option>
-                <option className="bg-stone-950">Critical</option>
-              </select>
-            </div>
           </div>
-          <div className="bg-transparent rounded-lg p-2 mb-2 grid grid-cols-5 gap-2 text-xs font-semibold text-[#8a8a8a] border border-[#27272a] hover:border-zinc-600 transition-colors duration-200">
-            <span>Time</span>
-            <span className="col-span-2">Event</span>
-            <span>Sector</span>
-            <span>Salience</span>
-          </div>
-          <div className="space-y-1 max-h-64 overflow-y-auto">
-            {logs.length > 0 ? (
-              logs.map((log, idx) => (
-                <div
-                  key={idx}
-                  className="bg-transparent rounded px-2 py-2 grid grid-cols-5 gap-2 text-xs text-[#9ca3af] hover:bg-transparent border border-transparent transition-colors"
-                >
-                  <span className="text-[#6b7280]">{log.time}</span>
-                  <span className="col-span-2">{log.event}</span>
-                  <span className="text-[#6b7280]">{log.sector}</span>
-                  <span
-                    className={
-                      log.level === 'Critical'
-                        ? 'text-[#f87171]'
-                        : log.level === 'Warning'
-                        ? 'text-[#facc15]'
-                        : 'text-[#9ca3af]'
-                    }
-                  >
-                    {log.salience}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-stone-500 py-8">
-                No activity logs yet. Start adding memories!
-              </div>
-            )}
+          
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-white/[0.02] sticky top-0 z-10 backdrop-blur-md">
+                <tr>
+                  <th className="py-3 px-4 text-xs font-medium text-stone-500 w-24">Time</th>
+                  <th className="py-3 px-4 text-xs font-medium text-stone-500">Event</th>
+                  <th className="py-3 px-4 text-xs font-medium text-stone-500 w-24">Sector</th>
+                  <th className="py-3 px-4 text-xs font-medium text-stone-500 w-20 text-right">Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {logs.length > 0 ? (
+                  logs.map((log, idx) => (
+                    <tr key={idx} className="hover:bg-white/[0.02] transition-colors group">
+                      <td className="py-3 px-4 text-xs text-stone-500 font-mono group-hover:text-stone-400">
+                        {log.time}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-stone-300">
+                        {log.event}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-stone-800 text-stone-400 border border-stone-700">
+                          {log.sector}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <span
+                          className={`font-mono text-xs font-bold ${
+                            log.level === 'Critical'
+                              ? 'text-red-400'
+                              : log.level === 'Warning'
+                              ? 'text-amber-400'
+                              : 'text-stone-500'
+                          }`}
+                        >
+                          {log.salience}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-stone-500 text-sm">
+                      No activity logs yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {}
-        <div className="bg-transparent rounded-xl p-6 border border-[#27272a] hover:border-zinc-600 transition-colors duration-200 transition-all duration-300">
-          <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">
-            Recent Memory Activity
-          </h2>
-          <div className="space-y-2">
-            {logs.length > 0 ? (
-              logs.slice(0, 10).map((log, idx) => (
-                <div
-                  key={idx}
-                  className="bg-transparent rounded p-3 text-sm border border-[#27272a] hover:border-zinc-600 transition-colors duration-200"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[#e6e6e6] font-medium">
+        {/* Recent Activity Feed */}
+        <div className="bg-stone-900/30 rounded-xl border border-white/5 backdrop-blur-sm overflow-hidden flex flex-col h-[500px]">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+            <h2 className="text-sm font-semibold text-stone-200 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-stone-400" />
+              Recent Activity
+            </h2>
+            <div className="flex gap-2">
+              <select
+                value={logFilter}
+                onChange={(e) => setLogFilter(e.target.value)}
+                className="bg-black/20 border border-white/10 rounded-lg px-3 py-1 text-xs text-stone-400 focus:outline-none focus:border-stone-500 transition-colors"
+              >
+                <option value="all">All Levels</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-auto p-4 space-y-3">
+            {logs
+              .filter((log) =>
+                logFilter === 'all'
+                  ? true
+                  : log.level.toLowerCase() === logFilter.toLowerCase(),
+              )
+              .length > 0 ? (
+              logs
+                .filter((log) =>
+                  logFilter === 'all'
+                    ? true
+                    : log.level.toLowerCase() === logFilter.toLowerCase(),
+                )
+                .slice(0, 15)
+                .map((log, idx) => (
+                  <div
+                    key={idx}
+                    className="relative pl-4 py-1 border-l-2 border-stone-800 hover:border-stone-600 transition-colors"
+                  >
+                  <div className="flex justify-between items-start mb-0.5">
+                    <span className="text-sm font-medium text-stone-200">
                       {log.event}
                     </span>
-                    <span className="text-xs text-[#6b7280]">{log.time}</span>
-                  </div>
-                  <div className="flex gap-3 text-xs text-[#8a8a8a]">
-                    <span>
-                      Sector:{' '}
-                      <span className="text-[#9ca3af]">{log.sector}</span>
+                    <span className="text-[10px] text-stone-500 font-mono">
+                      {log.time}
                     </span>
-                    <span>
-                      Salience:{' '}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-stone-500">
+                      Sector: <span className="text-stone-400">{log.sector}</span>
+                    </span>
+                    <span className="text-stone-500">
+                      Impact: {' '}
                       <span
                         className={
                           log.level === 'Critical'
-                            ? 'text-[#f87171]'
+                            ? 'text-red-400'
                             : log.level === 'Warning'
-                            ? 'text-[#facc15]'
-                            : 'text-[#9ca3af]'
+                            ? 'text-amber-400'
+                            : 'text-stone-400'
                         }
                       >
-                        {log.salience}
+                        {log.level}
                       </span>
                     </span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center text-stone-500 py-8">
+              <div className="text-center text-stone-500 py-8 text-sm">
                 No recent activity
               </div>
             )}
@@ -1127,36 +1260,60 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="bg-transparent rounded-xl p-6 border border-[#27272a] hover:border-zinc-600 transition-colors duration-200 transition-all duration-300">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#f4f4f5]">
-            Embedding Logs
+      {/* Embedding Logs Table */}
+      <div className="bg-stone-900/30 rounded-xl border border-white/5 backdrop-blur-sm overflow-hidden">
+        <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+          <h2 className="text-sm font-semibold text-stone-200 flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-stone-400" />
+            Embedding Operations
           </h2>
         </div>
-        <div className="bg-transparent rounded-lg p-2 mb-2 grid grid-cols-4 gap-2 text-xs font-semibold text-[#8a8a8a] border border-[#27272a] hover:border-zinc-600 transition-colors duration-200">
-          <span>Time</span>
-          <span>Model</span>
-          <span>Status</span>
-          <span>Error</span>
-        </div>
-        <div className="space-y-1 max-h-64 overflow-y-auto">
-          {embedLogs.length > 0 ? (
-            embedLogs.map((e, idx) => (
-              <div
-                key={idx}
-                className="bg-transparent rounded px-2 py-2 grid grid-cols-4 gap-2 text-xs text-[#9ca3af] hover:bg-transparent border border-transparent transition-colors"
-              >
-                <span className="text-[#6b7280]">{e.time}</span>
-                <span className="text-[#e6e6e6]">{e.model}</span>
-                <span className="text-[#9ca3af]">{e.status}</span>
-                <span className="text-[#f87171]">{e.err}</span>
-              </div>
-            ))
-          ) : (
-            <div className="text-center text-stone-500 py-8">
-              No embedding logs
-            </div>
-          )}
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead className="bg-white/[0.02]">
+              <tr>
+                {['Time', 'Model', 'Status', 'Operation', 'Provider', 'Duration', 'Dim', 'Code', 'Error'].map((h) => (
+                  <th key={h} className="py-3 px-4 text-xs font-medium text-stone-500 whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {embedLogs.length > 0 ? (
+                embedLogs.map((e, idx) => (
+                  <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 px-4 text-xs text-stone-500 font-mono">{e.time}</td>
+                    <td className="py-3 px-4 text-xs text-stone-300 font-medium">{e.model}</td>
+                    <td className="py-3 px-4 text-xs">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        e.status === 'success' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      }`}>
+                        {e.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-xs text-stone-400">{e.op}</td>
+                    <td className="py-3 px-4 text-xs text-stone-400">{e.provider}</td>
+                    <td className="py-3 px-4 text-xs text-stone-400 font-mono">{e.dur}ms</td>
+                    <td className="py-3 px-4 text-xs text-stone-500 font-mono">{e.dim}</td>
+                    <td className="py-3 px-4 text-xs text-stone-500 font-mono">{e.code}</td>
+                    <td className="py-3 px-4 text-xs text-red-400 max-w-[200px] truncate" title={e.err}>
+                      {e.err}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-stone-500 text-sm">
+                    No embedding logs available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

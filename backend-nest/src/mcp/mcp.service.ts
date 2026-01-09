@@ -89,10 +89,10 @@ export class McpService {
 
   private registerTools() {
     this.srv.registerTool(
-      'authfymemory_query',
+      'query',
       {
         title: 'Semantic retrieval',
-        description: 'Run a semantic retrieval against AuthfyMemory',
+        description: 'Run a semantic retrieval against Engramma',
         inputSchema: z.object({
           query: z
             .string()
@@ -163,10 +163,10 @@ export class McpService {
     );
 
     this.srv.registerTool(
-      'authfymemory_store',
+      'store',
       {
         title: 'Store memory',
-        description: 'Persist new content into AuthfyMemory',
+        description: 'Persist new content into Engramma',
         inputSchema: z.object({
           content: z.string().min(1).describe('Raw memory text to store'),
           tags: z.array(z.string()).optional().describe('Optional tag list'),
@@ -210,7 +210,7 @@ export class McpService {
     );
 
     this.srv.registerTool(
-      'authfymemory_list',
+      'list',
       {
         title: 'List memories',
         description: 'List recent memories',
@@ -260,7 +260,7 @@ export class McpService {
     );
 
     this.srv.registerTool(
-      'authfymemory_get',
+      'get',
       {
         title: 'Get memory',
         description: 'Fetch a single memory by identifier',
@@ -307,7 +307,7 @@ export class McpService {
     );
 
     this.srv.registerTool(
-      'authfymemory_reinforce',
+      'reinforce',
       {
         title: 'Reinforce memory',
         description: 'Reinforce a memory trace',
@@ -339,10 +339,10 @@ export class McpService {
 
   private registerResources() {
     this.srv.registerResource(
-      'authfymemory-config',
-      new ResourceTemplate('authfymemory://config', { list: undefined }),
+      'engramma-config',
+      new ResourceTemplate('engramma://config', { list: undefined }),
       {
-        title: 'AuthfyMemory Config',
+        title: 'Engramma Config',
         description: 'Runtime configuration snapshot',
       },
       async (uri) => {
@@ -362,13 +362,7 @@ export class McpService {
             version: '2.1.0',
             protocol: '2025-06-18',
           },
-          available_tools: [
-            'authfymemory_query',
-            'authfymemory_store',
-            'authfymemory_reinforce',
-            'authfymemory_list',
-            'authfymemory_get',
-          ],
+          available_tools: ['query', 'store', 'reinforce', 'list', 'get'],
         };
         return {
           contents: [{ uri: uri.href, text: JSON.stringify(pay, null, 2) }],

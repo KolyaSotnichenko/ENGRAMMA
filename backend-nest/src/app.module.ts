@@ -14,6 +14,7 @@ import { DynamicsModule } from './dynamics/dynamics.module';
 import { LanggraphModule } from './langgraph/langgraph.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { McpModule } from './mcp/mcp.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: ((): any[] => {
@@ -31,10 +32,11 @@ import { McpModule } from './mcp/mcp.module';
       DynamicsModule,
       DashboardModule,
       McpModule,
+      AuthModule,
     ];
     const mode = String(process.env.ENGRAMMA_MODE || 'standard').toLowerCase();
     if (mode === 'langgraph') base.push(LanggraphModule);
-    return base;
+    return base as unknown[];
   })(),
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],

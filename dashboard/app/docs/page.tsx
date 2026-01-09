@@ -4,7 +4,7 @@ export default function DocsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-10 font-sans">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-200">OpenMemory Guide</h1>
+        <h1 className="text-2xl font-bold text-stone-200">Engramma Guide</h1>
         <Link
           href="/"
           className="text-xs font-medium text-stone-400 hover:text-stone-200 border border-stone-800/50 rounded-md px-3 py-1.5"
@@ -16,7 +16,7 @@ export default function DocsPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-stone-200">Overview</h2>
         <p className="text-stone-400">
-          OpenMemory — система пам’яті з секторною семантикою, графом асоціацій,
+          Engramma — система пам’яті з секторною семантикою, графом асоціацій,
           гібридним пошуком і розумним обслуговуванням (згасання, рефлексії,
           консолідації, компресія). Ця сторінка коротко пояснює архітектуру,
           алгоритми, метрики та конфігурацію.
@@ -148,32 +148,60 @@ export default function DocsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-stone-200">Environment: Full Reference</h2>
+        <h2 className="text-lg font-semibold text-stone-200">
+          Environment: Full Reference
+        </h2>
         <ul className="text-stone-400 space-y-1">
           <li>- ENGRAMMA_PORT — порт сервера; default 8080</li>
           <li>- ENGRAMMA_API_KEY — ключ API; пустий вимикає guard (dev)</li>
-          <li>- ENGRAMMA_RATE_LIMIT_ENABLED/WINDOW_MS/MAX_REQUESTS — увімкнення, вікно (мс), ліміт;  true/60000/100</li>
-          <li>- ENGRAMMA_MODE — standard | langgraph</li>
+          <li>
+            - ENGRAMMA_RATE_LIMIT_ENABLED/WINDOW_MS/MAX_REQUESTS — увімкнення,
+            вікно (мс), ліміт; true/60000/100
+          </li>
+          <li>- ENGRAMMA_MODE — standard</li>
           <li>- ENGRAMMA_DB_PATH — шлях SQLite; ./data/authfymemory.sqlite</li>
-          <li>- ENGRAMMA_EMBEDDINGS — openai | gemini | ollama | local | synthetic</li>
-          <li>- ENGRAMMA_VEC_DIM — базова розмірність; залежить від tier; можна перевизначити</li>
+          <li>
+            - ENGRAMMA_EMBEDDINGS — openai | gemini | ollama | local | synthetic
+          </li>
+          <li>
+            - ENGRAMMA_VEC_DIM — базова розмірність; залежить від tier; можна
+            перевизначити
+          </li>
           <li>- ENGRAMMA_EMBED_MODE — simple | advanced</li>
-          <li>- ENGRAMMA_ADV_EMBED_PARALLEL — паралельність у advanced; false</li>
+          <li>
+            - ENGRAMMA_ADV_EMBED_PARALLEL — паралельність у advanced; false
+          </li>
           <li>- ENGRAMMA_EMBED_DELAY_MS — затримка між викликами; 200</li>
-          <li>- ENGRAMMA_OPENAI_BASE_URL — OpenAI endpoint; напр. http://127.0.0.1:1234/v1</li>
-          <li>- ENGRAMMA_OPENAI_MODEL — глобальна модель; напр. text-embedding-bge-m3</li>
+          <li>
+            - ENGRAMMA_OPENAI_BASE_URL — OpenAI endpoint; напр.
+            http://127.0.0.1:1234/v1
+          </li>
+          <li>
+            - ENGRAMMA_OPENAI_MODEL — глобальна модель; напр.
+            text-embedding-bge-m3
+          </li>
           <li>- ENGRAMMA_OPENAI_SECTOR_MODELS — JSON моделі по секторам</li>
-          <li>- ENGRAMMA_OPENAI_SECTOR_MODELS_FILE — шлях до JSON/YAML конфігу</li>
+          <li>
+            - ENGRAMMA_OPENAI_SECTOR_MODELS_FILE — шлях до JSON/YAML конфігу
+          </li>
           <li>- OPENAI_API_KEY — ключ постачальника</li>
           <li>- ENGRAMMA_STOPWORDS — JSON масив/обʼєкт стопслів</li>
           <li>- ENGRAMMA_REFLECT_EN_STEM — стемінг англ. у рефлексіях; true</li>
           <li>- ENGRAMMA_REFLECT_LEMMAS — JSON леми</li>
-          <li>- ENGRAMMA_REFLECT_EVIDENCE_COUNT — кількість речень‑доказів; 3</li>
-          <li>- ENGRAMMA_REFLECT_MAX_OVERLAP — макс. Jaccard перекриття; 0.8</li>
-          <li>- ENGRAMMA_BM25_MIGRATE_ON_START — міграція BM25 на старті; false</li>
+          <li>
+            - ENGRAMMA_REFLECT_EVIDENCE_COUNT — кількість речень‑доказів; 3
+          </li>
+          <li>
+            - ENGRAMMA_REFLECT_MAX_OVERLAP — макс. Jaccard перекриття; 0.8
+          </li>
+          <li>
+            - ENGRAMMA_BM25_MIGRATE_ON_START — міграція BM25 на старті; false
+          </li>
           <li>- ENGRAMMA_BM25_MIGRATE_BATCH — розмір батчу; 500</li>
           <li>- ENGRAMMA_SESSION_EVENT_TTL_MINUTES — TTL подій; 240</li>
-          <li>- ENGRAMMA_SESSION_PRUNE_INTERVAL_MINUTES — інтервал чистки; 10</li>
+          <li>
+            - ENGRAMMA_SESSION_PRUNE_INTERVAL_MINUTES — інтервал чистки; 10
+          </li>
           <li>- ENGRAMMA_SESSION_MAX_EVENTS_PER_USER — ліміт подій; 1000</li>
           <li>- ENGRAMMA_SESSION_TIMEOUT_MINUTES — таймаут сесії; 30</li>
           <li>- ENGRAMMA_COACT_WINDOW_MINUTES — вікно інгесту; 30</li>
@@ -191,7 +219,10 @@ export default function DocsPage() {
           <li>- ENGRAMMA_KEYWORD_MIN_LENGTH — мін. довжина токена; 3</li>
           <li>- ENGRAMMA_SECTOR_WEIGHTS — JSON ваги секторів</li>
           <li>- ENGRAMMA_FUSION_BETA — softmax β; 2.5</li>
-          <li>- ENGRAMMA_SECTOR_RESONANCE — JSON матриця резонансу секторів (множник у ранжуванні)</li>
+          <li>
+            - ENGRAMMA_SECTOR_RESONANCE — JSON матриця резонансу секторів
+            (множник у ранжуванні)
+          </li>
           <li>- ENGRAMMA_VEC_CACHE_TTL — TTL кешу векторів (мс); 300000</li>
           <li>- ENGRAMMA_VEC_CACHE_MAX — макс. кешованих векторів; 5000</li>
           <li>- ENGRAMMA_PRUNE_INTERVAL_MINUTES — інтервал чистки; 5</li>
@@ -202,11 +233,19 @@ export default function DocsPage() {
           <li>- ENGRAMMA_DECAY_INTERVAL_MINUTES — інтервал декею; 30</li>
           <li>- ENGRAMMA_DECAY_THREADS — воркери; 3</li>
           <li>- ENGRAMMA_DECAY_COLD_THRESHOLD — поріг «холодних»; 0.25</li>
-          <li>- ENGRAMMA_DECAY_REINFORCE_ON_QUERY — підсилювати при запиті; true</li>
+          <li>
+            - ENGRAMMA_DECAY_REINFORCE_ON_QUERY — підсилювати при запиті; true
+          </li>
           <li>- ENGRAMMA_REGENERATION_ENABLED — регенерація на хіт; true</li>
-          <li>- ENGRAMMA_DECAY_LAMBDA_HOT/WARM/COLD — λ/день: 0.005/0.02/0.05</li>
-          <li>- ENGRAMMA_DECAY_COACT_MOD — уповільнення λ від коактивацій; 0.15</li>
-          <li>- ENGRAMMA_MIN_VECTOR_DIM — мін. розмірність для регенерації; 64</li>
+          <li>
+            - ENGRAMMA_DECAY_LAMBDA_HOT/WARM/COLD — λ/день: 0.005/0.02/0.05
+          </li>
+          <li>
+            - ENGRAMMA_DECAY_COACT_MOD — уповільнення λ від коактивацій; 0.15
+          </li>
+          <li>
+            - ENGRAMMA_MIN_VECTOR_DIM — мін. розмірність для регенерації; 64
+          </li>
           <li>- ENGRAMMA_USE_SUMMARY_ONLY — зберігати лише резюме; true</li>
           <li>- ENGRAMMA_SUMMARY_MAX_LENGTH — макс. довжина резюме; 300</li>
           <li>- ENGRAMMA_SEG_SIZE — розмір сегмента памʼятей; 10000</li>
@@ -265,24 +304,75 @@ export default function DocsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-stone-200">Algorithms: Full Reference</h2>
+        <h2 className="text-lg font-semibold text-stone-200">
+          Algorithms: Full Reference
+        </h2>
         <ul className="text-stone-400 space-y-1">
-          <li>- Hybrid score: s = σ( w<sub>sim</sub>·boostedSim + w<sub>overlap</sub>·tokOv + w<sub>wp</sub>·wpWt + w<sub>rec</sub>·rec + keywordScore )</li>
-          <li>- BM25: score = Σ IDF(t) · ((tf·(k+1)) / (tf + k·(1-b + b·|D|/avgD)))</li>
-          <li>- Cross-sector resonance: fusedAdj = fusedSim · R[primary_sector][query_sector]; конфігуровано через ENGRAMMA_SECTOR_RESONANCE</li>
-          <li>- Spreading activation: a<sub>t+1</sub>(dst) += Σ weight · a<sub>t</sub>(src) · e<sup>-γ</sup>; поріг τ · (1 + log(sumE + 1))</li>
-          <li>- Tiered decay: λ ∈ &lcub;hot,warm,cold&rcub; за salience/давністю; λ модулюється (1 − ENGRAMMA_DECAY_COACT_MOD) при коактиваціях</li>
-          <li>- Vector compression: bucket‑усереднення до target dim; нормалізація на step</li>
-          <li>- Fingerprint: знаковий хеш‑вектор довжини d; нормування по max|x|</li>
-          <li>- Regeneration: якщо dim ≤ ENGRAMMA_MIN_VECTOR_DIM та хіт → повний секторний ембеддинг</li>
-          <li>- Reinforce: salience сусідів += boost · edgeWeight; обмеження до [0..1]</li>
-          <li>- Reflection: кластери за cosine ≥ ENGRAMMA_REFLECT_SIM_THRESHOLD; evidence = ENGRAMMA_REFLECT_EVIDENCE_COUNT</li>
-          <li>- Hierarchical consolidation: super‑батьки за ENGRAMMA_REFLECT_SUPER_SIM_THRESHOLD; межі ENGRAMMA_REFLECT_SUPER_MIN/MAX_CLUSTERS</li>
-          <li>- Sector fusion: softmax ваг з ENGRAMMA_SECTOR_WEIGHTS, β = ENGRAMMA_FUSION_BETA</li>
-          <li>- Keyword ranking: HYBRID → BM25; FAST → IDF‑зважений токен‑оверлап</li>
-          <li>- Graph pruning: видалення ребер weight&lt;threshold або age&gt;days з ENGRAMMA_PRUNE_*</li>
-          <li>- Coactivation ingestion: вікно/ліміти/ваги з ENGRAMMA_COACT_*; personalization через ENGRAMMA_QUERY_COACT_BOOST</li>
-          <li>- Query pipeline: ембеддинг запиту → cosine/keywords → злиття → резонанс → activation → path → регенерація → top‑k</li>
+          <li>
+            - Hybrid score: s = σ( w<sub>sim</sub>·boostedSim + w
+            <sub>overlap</sub>·tokOv + w<sub>wp</sub>·wpWt + w<sub>rec</sub>·rec
+            + keywordScore )
+          </li>
+          <li>
+            - BM25: score = Σ IDF(t) · ((tf·(k+1)) / (tf + k·(1-b +
+            b·|D|/avgD)))
+          </li>
+          <li>
+            - Cross-sector resonance: fusedAdj = fusedSim ·
+            R[primary_sector][query_sector]; конфігуровано через
+            ENGRAMMA_SECTOR_RESONANCE
+          </li>
+          <li>
+            - Spreading activation: a<sub>t+1</sub>(dst) += Σ weight · a
+            <sub>t</sub>(src) · e<sup>-γ</sup>; поріг τ · (1 + log(sumE + 1))
+          </li>
+          <li>
+            - Tiered decay: λ ∈ &lcub;hot,warm,cold&rcub; за salience/давністю;
+            λ модулюється (1 − ENGRAMMA_DECAY_COACT_MOD) при коактиваціях
+          </li>
+          <li>
+            - Vector compression: bucket‑усереднення до target dim; нормалізація
+            на step
+          </li>
+          <li>
+            - Fingerprint: знаковий хеш‑вектор довжини d; нормування по max|x|
+          </li>
+          <li>
+            - Regeneration: якщо dim ≤ ENGRAMMA_MIN_VECTOR_DIM та хіт → повний
+            секторний ембеддинг
+          </li>
+          <li>
+            - Reinforce: salience сусідів += boost · edgeWeight; обмеження до
+            [0..1]
+          </li>
+          <li>
+            - Reflection: кластери за cosine ≥ ENGRAMMA_REFLECT_SIM_THRESHOLD;
+            evidence = ENGRAMMA_REFLECT_EVIDENCE_COUNT
+          </li>
+          <li>
+            - Hierarchical consolidation: super‑батьки за
+            ENGRAMMA_REFLECT_SUPER_SIM_THRESHOLD; межі
+            ENGRAMMA_REFLECT_SUPER_MIN/MAX_CLUSTERS
+          </li>
+          <li>
+            - Sector fusion: softmax ваг з ENGRAMMA_SECTOR_WEIGHTS, β =
+            ENGRAMMA_FUSION_BETA
+          </li>
+          <li>
+            - Keyword ranking: HYBRID → BM25; FAST → IDF‑зважений токен‑оверлап
+          </li>
+          <li>
+            - Graph pruning: видалення ребер weight&lt;threshold або age&gt;days
+            з ENGRAMMA_PRUNE_*
+          </li>
+          <li>
+            - Coactivation ingestion: вікно/ліміти/ваги з ENGRAMMA_COACT_*;
+            personalization через ENGRAMMA_QUERY_COACT_BOOST
+          </li>
+          <li>
+            - Query pipeline: ембеддинг запиту → cosine/keywords → злиття →
+            резонанс → activation → path → регенерація → top‑k
+          </li>
         </ul>
       </section>
 

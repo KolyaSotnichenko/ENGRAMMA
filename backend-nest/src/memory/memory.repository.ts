@@ -152,7 +152,15 @@ export class MemoryRepository {
     );
   }
 
-  getVectorsBySector(sector: Sector): Promise<VectorRow[]> {
+  getVectorsBySector(
+    sector: Sector,
+    user_id?: string | null,
+  ): Promise<VectorRow[]> {
+    if (user_id !== undefined)
+      return this.db.all<VectorRow>(
+        `select id,sector,v,dim from vectors where sector=? and user_id=?`,
+        [sector, user_id],
+      );
     return this.db.all<VectorRow>(
       `select id,sector,v,dim from vectors where sector=?`,
       [sector],
@@ -528,10 +536,33 @@ export class MemoryRepository {
     status: string,
     ts: number,
     err?: string,
+    details?: {
+      op?: string;
+      provider?: string;
+      duration_ms?: number;
+      input_len?: number;
+      output_dim?: number;
+      status_code?: number;
+      memory_id?: string;
+    },
   ) {
     return this.db.run(
-      `insert into embed_logs(id,model,status,ts,err) values(?,?,?,?,?)`,
-      [id, model, status, ts, err || null],
+      `insert into embed_logs(id,model,status,ts,err,op,provider,duration_ms,input_len,output_dim,status_code,memory_id)
+       values(?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        id,
+        model,
+        status,
+        ts,
+        err || null,
+        details?.op || null,
+        details?.provider || null,
+        details?.duration_ms ?? null,
+        details?.input_len ?? null,
+        details?.output_dim ?? null,
+        details?.status_code ?? null,
+        details?.memory_id || null,
+      ],
     );
   }
 }

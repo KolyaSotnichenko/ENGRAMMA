@@ -536,8 +536,15 @@ export class DashboardController {
         status: string;
         ts: number;
         err: string | null;
+        op: string | null;
+        provider: string | null;
+        duration_ms: number | null;
+        input_len: number | null;
+        output_dim: number | null;
+        status_code: number | null;
+        memory_id: string | null;
       }>(
-        `select id, model, status, ts, err from embed_logs${where} order by ts desc limit ?`,
+        `select id, model, status, ts, err, op, provider, duration_ms, input_len, output_dim, status_code, memory_id from embed_logs${where} order by ts desc limit ?`,
         [...params, lim],
       );
       res.json({ logs: rows });

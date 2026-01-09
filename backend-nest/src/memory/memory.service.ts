@@ -1938,6 +1938,7 @@ export class MemoryService {
     }
     const same = await this.repo.getVectorsBySector(
       cls.primary_sector as Sector,
+      user_id ?? null,
     );
     const vecPrim = vecMap[cls.primary_sector as Sector];
     for (const vr of same) {
@@ -2011,12 +2012,13 @@ export class MemoryService {
         query,
         searchSectors,
       );
+      const u = filters?.user_id || null;
       const items = new Map<
         string,
         { sims: Partial<Record<Sector, number>> }
       >();
       for (const s of searchSectors) {
-        const rows = (await this.repo.getVectorsBySector(s)) as VectorRow[];
+        const rows = (await this.repo.getVectorsBySector(s, u)) as VectorRow[];
         const qv = qVs[s];
         for (const r of rows) {
           const sim = this.emb.cosine(qv, this.getVectorCached(r.id, s, r.v));
@@ -2037,7 +2039,6 @@ export class MemoryService {
         if (m) mems.set(id, m);
       }
       const scored: Array<{ id: string; score: number }> = [];
-      const u = filters?.user_id || null;
       const prev = u ? this.sessionLast.get(u) : undefined;
       const useGraph =
         (filters?.use_graph ?? false) ||

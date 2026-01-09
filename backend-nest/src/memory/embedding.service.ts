@@ -100,14 +100,34 @@ export class EmbeddingService {
     }
     return { models, defaultModel: def };
   }
-  private async logEmbed(model: string, status: string, err?: string) {
+  private async logEmbed(
+    model: string,
+    status: string,
+    details?: {
+      err?: string;
+      op?: string;
+      provider?: string;
+      duration_ms?: number;
+      input_len?: number;
+      output_dim?: number;
+      status_code?: number;
+      memory_id?: string;
+    },
+  ) {
     const id = randomUUID();
     const ts = Date.now();
     try {
-      await this.repo.insertEmbedLog(id, model, status, ts, err);
+      await this.repo.insertEmbedLog(
+        id,
+        model,
+        status,
+        ts,
+        details?.err,
+        details,
+      );
     } catch {
       this.logger.error(
-        `Failed to log embed log id=${id} model=${model} status=${status} err=${err}`,
+        `Failed to log embed log id=${id} model=${model} status=${status} err=${details?.err}`,
       );
     }
   }
@@ -219,10 +239,16 @@ export class EmbeddingService {
       if (res.ok) {
         const json = (await res.json()) as { data?: { embedding: number[] }[] };
         const emb = json?.data?.[0]?.embedding || [];
-        this.logger.log(
-          `openai embed len=${emb.length} time=${Date.now() - t0}ms`,
-        );
-        await this.logEmbed(mdl, 'completed');
+        const dur = Date.now() - t0;
+        this.logger.log(`openai embed len=${emb.length} time=${dur}ms`);
+        await this.logEmbed(mdl, 'completed', {
+          op: 'openai_embed',
+          provider: 'openai',
+          duration_ms: dur,
+          input_len: text.length,
+          output_dim: emb.length,
+          status_code: res.status,
+        });
         return emb;
       }
       const msg = await res.text();
@@ -233,7 +259,12 @@ export class EmbeddingService {
         await this.sleep(250 * Math.pow(2, attempt));
       else break;
     }
-    await this.logEmbed(mdl, 'failed');
+    await this.logEmbed(mdl, 'failed', {
+      op: 'openai_embed',
+      provider: 'openai',
+      status_code: 0,
+      err: 'failed',
+    });
     return this.embed(text);
   }
   async embedForSectors(
@@ -291,10 +322,16 @@ export class EmbeddingService {
       if (res.ok) {
         const json = (await res.json()) as { data?: { embedding: number[] }[] };
         const embs = (json?.data || []).map((d) => d.embedding || []);
-        this.logger.log(
-          `openai batch count=${embs.length} time=${Date.now() - t0}ms`,
-        );
-        await this.logEmbed(mdl, 'completed');
+        const dur = Date.now() - t0;
+        this.logger.log(`openai batch count=${embs.length} time=${dur}ms`);
+        await this.logEmbed(mdl, 'completed', {
+          op: 'openai_embed_batch',
+          provider: 'openai',
+          duration_ms: dur,
+          input_len: inputs.reduce((s, t) => s + t.length, 0),
+          output_dim: embs[0]?.length || 0,
+          status_code: res.status,
+        });
         return embs;
       }
       const msg = await res.text();
@@ -305,7 +342,12 @@ export class EmbeddingService {
         await this.sleep(250 * Math.pow(2, attempt));
       else break;
     }
-    await this.logEmbed(mdl, 'failed');
+    await this.logEmbed(mdl, 'failed', {
+      op: 'openai_embed_batch',
+      provider: 'openai',
+      status_code: 0,
+      err: 'failed',
+    });
     return inputs.map((t) => this.embed(t));
   }
   bufferToVector(buf: Buffer): number[] {

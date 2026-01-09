@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/sidebar';
 import Navbar from '@/components/navbar';
+import AuthGate from '@/providers/AuthGate';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,11 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'AuthfyMemory Dashboard',
+  title: 'Engramma Dashboard',
   description: 'Memory analytics and monitoring dashboard',
-  icons: {
-    icon: '/favicon.ico',
-  },
 };
 
 export default function RootLayout({
@@ -33,11 +31,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-stone-300`}
         suppressHydrationWarning
       >
-        <Sidebar />
-        <Navbar />
-        <main className="mt-20 p-4 min-h-[calc(100vh-5rem)] transition-all duration-300">
-          {children}
-        </main>
+        <AuthGate>
+          <Sidebar />
+          <Navbar />
+          <main className="mt-20 p-4 pb-28 min-h-[calc(100vh-5rem)] transition-all duration-300">
+            {children}
+          </main>
+        </AuthGate>
       </body>
     </html>
   );

@@ -68,6 +68,7 @@ export default function GraphExplorer() {
   const [spread, setSpread] = useState(1.6);
   const [activeIds, setActiveIds] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
   const [hiddenSectors, setHiddenSectors] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   // const [timeFilter, setTimeFilter] = useState<number | null>(null);
@@ -500,17 +501,28 @@ export default function GraphExplorer() {
   useEffect(() => {
     if (activeClusterIndex >= components.length) setActiveClusterIndex(0);
   }, [components.length]);
-  const visibleNodeIds = new Set(activeComp);
+  const effectiveVisibleNodeIds = useMemo(() => {
+    const base = new Set(activeComp);
+    if (!focusNodeId) return base;
+    const neighbors = new Set<string>([focusNodeId]);
+    for (const e of graphEdges) {
+      if (e.source === focusNodeId) neighbors.add(e.target);
+      else if (e.target === focusNodeId) neighbors.add(e.source);
+    }
+    return new Set(Array.from(neighbors).filter((id) => base.has(id)));
+  }, [focusNodeId, graphEdges, activeComp]);
   const visibleNodes = useMemo(
-    () => graphNodes.filter((n) => visibleNodeIds.has(n.id)),
-    [graphNodes, visibleNodeIds],
+    () => graphNodes.filter((n) => effectiveVisibleNodeIds.has(n.id)),
+    [graphNodes, effectiveVisibleNodeIds],
   );
   const visibleEdges = useMemo(
     () =>
       graphEdges.filter(
-        (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target),
+        (e) =>
+          effectiveVisibleNodeIds.has(e.source) &&
+          effectiveVisibleNodeIds.has(e.target),
       ),
-    [graphEdges, visibleNodeIds],
+    [graphEdges, effectiveVisibleNodeIds],
   );
 
   const hasGraph = visibleNodes.length > 0;
@@ -566,9 +578,11 @@ export default function GraphExplorer() {
                 if (node) {
                   setSelectedNode(node);
                   setActiveIds([node.id]);
+                  setFocusNodeId(node.id);
                 } else {
                   setSelectedNode(null);
                   setActiveIds([]);
+                  setFocusNodeId(null);
                 }
               }}
               onNodePointerOver={(node) => {
@@ -740,6 +754,7 @@ export default function GraphExplorer() {
                 onClick={() => {
                   setSelectedNode(null);
                   setActiveIds([]);
+                  setFocusNodeId(null);
                 }}
                 className="text-stone-500 hover:text-stone-300 p-1 hover:bg-stone-900 rounded-md transition-colors"
               >
@@ -900,6 +915,7 @@ export default function GraphExplorer() {
                             if (otherNode) {
                               setSelectedNode(otherNode);
                               setActiveIds([otherNode.id]);
+                              setFocusNodeId(otherNode.id);
                             }
                           }}
                         >
