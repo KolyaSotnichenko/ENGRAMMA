@@ -25,6 +25,10 @@ export class DashboardController {
         'select count(*) as cnt from waypoints',
         [],
       );
+      const remcnt = await this.db.get<{ cnt: number }>(
+        'select count(*) as cnt from reminders',
+        [],
+      );
       const mu = process.memoryUsage();
       const toMB = (n: number) => Math.round(n / (1024 * 1024));
       const uptime = Math.floor(process.uptime());
@@ -50,6 +54,7 @@ export class DashboardController {
           memories: memcnt?.cnt || 0,
           vectors: vecs?.cnt || 0,
           waypoints: waycnt?.cnt || 0,
+          reminders: remcnt?.cnt || 0,
         },
       });
     } catch {

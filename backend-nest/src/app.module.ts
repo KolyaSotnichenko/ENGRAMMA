@@ -15,6 +15,7 @@ import { LanggraphModule } from './langgraph/langgraph.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { McpModule } from './mcp/mcp.module';
 import { AuthModule } from './auth/auth.module';
+import { RemindersModule } from './reminders/reminders.module';
 
 @Module({
   imports: ((): any[] => {
@@ -33,6 +34,7 @@ import { AuthModule } from './auth/auth.module';
       DashboardModule,
       McpModule,
       AuthModule,
+      RemindersModule,
     ];
     const mode = String(process.env.ENGRAMMA_MODE || 'standard').toLowerCase();
     if (mode === 'langgraph') base.push(LanggraphModule);
