@@ -133,6 +133,41 @@ export class SqliteService {
         weight real not null,
         metadata text
       )`);
+      this.db.run(`create table if not exists reminders(
+        id text primary key,
+        user_id text,
+        content text not null,
+        due_at integer not null,
+        timezone text,
+        repeat_every_ms integer,
+        cooldown_ms integer,
+        status text not null,
+        tags text,
+        created_at integer not null,
+        updated_at integer not null,
+        last_triggered_at integer,
+        completed_at integer,
+        cancelled_at integer,
+        meta text
+      )`);
+      this.db.all(
+        `PRAGMA table_info(reminders)`,
+        [],
+        (err: Error | null, rows: Array<{ name: string }>) => {
+          if (err) return;
+          const names = new Set(rows.map((r) => String(r.name)));
+          if (!names.has('tags')) this.db.run(`alter table reminders add column tags text`);
+        },
+      );
+      this.db.run(
+        `create index if not exists idx_reminders_user on reminders(user_id)`,
+      );
+      this.db.run(
+        `create index if not exists idx_reminders_status_due on reminders(status, due_at)`,
+      );
+      this.db.run(
+        `create index if not exists idx_reminders_due on reminders(due_at)`,
+      );
       this.db.run(
         `create index if not exists idx_memories_sector on memories(primary_sector)`,
       );

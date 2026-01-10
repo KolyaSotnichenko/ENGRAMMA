@@ -49,13 +49,6 @@ const SETTING_METADATA: Record<string, SettingInfo> = {
     type: 'number',
     placeholder: '100',
   },
-  OM_LOG_AUTH: {
-    category: 'Server',
-    label: 'Log Authentication',
-    description: 'Log all authenticated requests (useful for debugging)',
-    type: 'select',
-    options: ['true', 'false'],
-  },
   ENGRAMMA_MODE: {
     category: 'Server',
     label: 'Server Mode',
@@ -262,8 +255,179 @@ const SETTING_METADATA: Record<string, SettingInfo> = {
   },
 };
 
+const EXTRA_KNOWN_KEYS = [
+  'ENGRAMMA_VEC_DIM',
+  'ENGRAMMA_MIN_VECTOR_DIM',
+  'ENGRAMMA_CACHE_SEGMENTS',
+  'ENGRAMMA_FUSION_BETA',
+  'ENGRAMMA_SECTOR_WEIGHTS',
+  'ENGRAMMA_SECTOR_RESONANCE',
+  'ENGRAMMA_STOPWORDS',
+  'ENGRAMMA_VEC_CACHE_TTL',
+  'ENGRAMMA_VEC_CACHE_MAX',
+  'ENGRAMMA_PRUNE_INTERVAL_MINUTES',
+  'ENGRAMMA_PRUNE_WEAK_THRESHOLD',
+  'ENGRAMMA_PRUNE_AGE_DAYS',
+  'ENGRAMMA_PRUNE_OLD_THRESHOLD',
+  'ENGRAMMA_PRUNE_MAX_OUTDEG',
+  'ENGRAMMA_DENSE_PRUNE_INTERVAL',
+  'ENGRAMMA_DENSE_PRUNE_THRESHOLD',
+  'ENGRAMMA_DENSE_SOFTMAX_BETA',
+  'ENGRAMMA_BM25_MIGRATE_ON_START',
+  'ENGRAMMA_BM25_MIGRATE_BATCH',
+  'ENGRAMMA_REFLECT_EN_STEM',
+  'ENGRAMMA_REFLECT_LEMMAS',
+  'ENGRAMMA_REFLECT_EVIDENCE_COUNT',
+  'ENGRAMMA_REFLECT_MAX_OVERLAP',
+  'ENGRAMMA_REFLECT_SIM_THRESHOLD',
+  'ENGRAMMA_REFLECT_MIN_CLUSTER',
+  'ENGRAMMA_REFLECT_MAX_CLUSTERS',
+  'ENGRAMMA_REFLECT_HIER_ENABLED',
+  'ENGRAMMA_REFLECT_HIER_INTERVAL',
+  'ENGRAMMA_REFLECT_SUPER_MIN_CLUSTER',
+  'ENGRAMMA_REFLECT_SUPER_MAX_CLUSTERS',
+  'ENGRAMMA_REFLECT_SUPER_SIM_THRESHOLD',
+  'ENGRAMMA_COACT_INTERVAL_MINUTES',
+  'ENGRAMMA_COACT_TOP',
+  'ENGRAMMA_COACT_BOOST',
+  'ENGRAMMA_COACT_WINDOW_MINUTES',
+  'ENGRAMMA_COACT_EVENTS_LIMIT',
+  'ENGRAMMA_COACT_TYPE_WEIGHTS',
+  'ENGRAMMA_COACT_EVENT_ALPHA',
+  'ENGRAMMA_COACT_EVENT_SYMMETRIC',
+  'ENGRAMMA_QUERY_COACT_BOOST',
+  'ENGRAMMA_USE_GRAPH',
+  'ENGRAMMA_GRAPH_DEPTH',
+  'ENGRAMMA_ACTIVATION_STEPS',
+  'ENGRAMMA_ACTIVATION_GAMMA',
+  'ENGRAMMA_ACTIVATION_WEIGHT',
+  'ENGRAMMA_ACTIVATION_TAU',
+  'ENGRAMMA_DECAY_LAMBDA_HOT',
+  'ENGRAMMA_DECAY_LAMBDA_WARM',
+  'ENGRAMMA_DECAY_LAMBDA_COLD',
+  'ENGRAMMA_DECAY_COACT_MOD',
+  'ENGRAMMA_AUTH_SESSION_TTL_MS',
+  'ENGRAMMA_OPENAI_SECTOR_MODELS',
+  'ENGRAMMA_OPENAI_SECTOR_MODELS_FILE',
+  'ENGRAMMA_SESSION_EVENT_TTL_MINUTES',
+  'ENGRAMMA_SESSION_PRUNE_INTERVAL_MINUTES',
+  'ENGRAMMA_SESSION_MAX_EVENTS_PER_USER',
+  'ENGRAMMA_SESSION_TIMEOUT_MINUTES',
+  'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_API_KEY',
+  'GEMINI_API_KEY',
+  'OM_GEMINI_API_KEY',
+];
+
+const CATEGORY_ORDER = [
+  'Server',
+  'Auth',
+  'Database',
+  'Embeddings',
+  'Performance',
+  'Ranking',
+  'Graph',
+  'Memory',
+  'Decay',
+  'Pruning',
+  'Features',
+  'Reflection',
+  'Reflection (Hierarchy)',
+  'Coactivation',
+  'Sessions',
+  'Compression',
+  'Dashboard',
+  'API Keys',
+  'Other',
+];
+
+function inferCategory(key: string): string {
+  const meta = SETTING_METADATA[key];
+  if (meta?.category) return meta.category;
+
+  if (key.startsWith('NEXT_PUBLIC_')) return 'Dashboard';
+
+  if (
+    key.startsWith('ENGRAMMA_OPENAI_') ||
+    key.startsWith('ENGRAMMA_EMBED') ||
+    key === 'OPENAI_API_KEY' ||
+    key === 'GEMINI_API_KEY' ||
+    key === 'OM_GEMINI_API_KEY' ||
+    key === 'ENGRAMMA_VEC_DIM' ||
+    key === 'ENGRAMMA_MIN_VECTOR_DIM' ||
+    key === 'ENGRAMMA_MAX_PAYLOAD_SIZE'
+  ) {
+    return 'Embeddings';
+  }
+
+  if (key === 'ENGRAMMA_AUTH_SESSION_TTL_MS') return 'Auth';
+  if (key === 'ENGRAMMA_DB_PATH') return 'Database';
+
+  if (
+    key.startsWith('ENGRAMMA_RATE_LIMIT_') ||
+    key === 'ENGRAMMA_PORT' ||
+    key === 'ENGRAMMA_API_KEY' ||
+    key === 'ENGRAMMA_MODE'
+  ) {
+    return 'Server';
+  }
+
+  if (
+    key === 'ENGRAMMA_TIER' ||
+    key.startsWith('ENGRAMMA_KEYWORD_') ||
+    key.startsWith('ENGRAMMA_FUSION_') ||
+    key.startsWith('ENGRAMMA_SECTOR_') ||
+    key === 'ENGRAMMA_STOPWORDS' ||
+    key === 'ENGRAMMA_QUERY_COACT_BOOST'
+  ) {
+    return 'Ranking';
+  }
+
+  if (
+    key === 'ENGRAMMA_USE_GRAPH' ||
+    key.startsWith('ENGRAMMA_GRAPH_') ||
+    key.startsWith('ENGRAMMA_ACTIVATION_')
+  ) {
+    return 'Graph';
+  }
+
+  if (key.startsWith('ENGRAMMA_SESSION_')) return 'Sessions';
+  if (key.startsWith('ENGRAMMA_COACT_')) return 'Coactivation';
+
+  if (
+    key.startsWith('ENGRAMMA_REFLECT_HIER_') ||
+    key.startsWith('ENGRAMMA_REFLECT_SUPER_')
+  ) {
+    return 'Reflection (Hierarchy)';
+  }
+  if (key.startsWith('ENGRAMMA_REFLECT_') || key === 'ENGRAMMA_AUTO_REFLECT') {
+    return 'Reflection';
+  }
+
+  if (
+    key === 'ENGRAMMA_COMPRESSION_ENABLED' ||
+    key === 'ENGRAMMA_COMPRESSION_MIN_LENGTH' ||
+    key === 'ENGRAMMA_USE_SUMMARY_ONLY' ||
+    key === 'ENGRAMMA_SUMMARY_MAX_LENGTH'
+  ) {
+    return 'Compression';
+  }
+
+  if (key.startsWith('ENGRAMMA_DECAY_') || key === 'ENGRAMMA_REGENERATION_ENABLED') {
+    return 'Decay';
+  }
+
+  if (key.startsWith('ENGRAMMA_PRUNE_') || key.startsWith('ENGRAMMA_DENSE_')) {
+    return 'Pruning';
+  }
+
+  return 'Other';
+}
+
 export default function settings() {
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [originalSettings, setOriginalSettings] = useState<Record<string, string>>({});
+  const [maskedSecrets, setMaskedSecrets] = useState<Record<string, true>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -273,6 +437,7 @@ export default function settings() {
   }, []);
 
   const loadSettings = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/settings`);
 
@@ -281,7 +446,22 @@ export default function settings() {
       }
 
       const data = await response.json();
-      setSettings(data.settings || {});
+      const raw = (data.settings || {}) as Record<string, string>;
+      const next: Record<string, string> = {};
+      const masked: Record<string, true> = {};
+
+      for (const [k, v] of Object.entries(raw)) {
+        if (v === '***') {
+          next[k] = '';
+          masked[k] = true;
+          continue;
+        }
+        next[k] = String(v ?? '');
+      }
+
+      setSettings(next);
+      setOriginalSettings(next);
+      setMaskedSecrets(masked);
       setLoading(false);
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -301,12 +481,33 @@ export default function settings() {
     setMessage('');
 
     try {
+      const allKeys = Array.from(
+        new Set([
+          ...Object.keys(SETTING_METADATA),
+          ...EXTRA_KNOWN_KEYS,
+          ...Object.keys(settings),
+        ]),
+      );
+
+      const updates: Record<string, string> = {};
+      for (const key of allKeys) {
+        const meta = SETTING_METADATA[key];
+        const cur = settings[key] ?? '';
+        const prev = originalSettings[key] ?? '';
+        const isSecret = meta?.type === 'password' || key.endsWith('_API_KEY') || key.includes('API_KEY');
+
+        if (isSecret && maskedSecrets[key] && !cur) continue;
+        if (cur === prev) continue;
+
+        updates[key] = cur;
+      }
+
       const response = await fetch(`/api/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(updates),
       });
 
       if (!response.ok) {
@@ -335,14 +536,37 @@ export default function settings() {
     );
   }
 
-  const categorizedSettings: Record<string, Array<[string, string]>> = {};
-  Object.entries(settings).forEach(([key, value]) => {
-    const category = SETTING_METADATA[key]?.category || 'Other';
-    if (!categorizedSettings[category]) {
-      categorizedSettings[category] = [];
-    }
-    categorizedSettings[category].push([key, value]);
+  const allKeys = Array.from(
+    new Set([
+      ...Object.keys(SETTING_METADATA),
+      ...EXTRA_KNOWN_KEYS,
+      ...Object.keys(settings),
+    ]),
+  );
+
+  const categorizedSettings: Record<string, string[]> = {};
+  for (const key of allKeys) {
+    const category = inferCategory(key);
+    if (!categorizedSettings[category]) categorizedSettings[category] = [];
+    categorizedSettings[category].push(key);
+  }
+
+  const categories = Object.keys(categorizedSettings).sort((a, b) => {
+    const ia = CATEGORY_ORDER.indexOf(a);
+    const ib = CATEGORY_ORDER.indexOf(b);
+    const ra = ia === -1 ? 10_000 : ia;
+    const rb = ib === -1 ? 10_000 : ib;
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
   });
+
+  for (const c of categories) {
+    categorizedSettings[c].sort((ka, kb) => {
+      const la = SETTING_METADATA[ka]?.label || ka;
+      const lb = SETTING_METADATA[kb]?.label || kb;
+      return la.localeCompare(lb);
+    });
+  }
 
   const categoryIcons: Record<string, string> = {
     Server:
@@ -377,31 +601,55 @@ export default function settings() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
-      <h1 className="text-white text-2xl mb-6">Settings</h1>
+    <div className="min-h-screen pb-32 max-w-6xl mx-auto space-y-8" suppressHydrationWarning>
+      <div className="flex items-end gap-4 pt-6">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white via-stone-200 to-stone-500">
+            Settings
+          </h1>
+          <p className="text-stone-400 text-sm">
+            Backend configuration saved into root .env
+          </p>
+        </div>
+
+        <div className="ml-auto flex gap-3">
+          <button
+            onClick={handlesave}
+            disabled={saving}
+            className="rounded-xl px-4 py-2 bg-sky-500/15 hover:bg-sky-500/20 border border-sky-500/20 text-sky-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            onClick={loadSettings}
+            disabled={loading}
+            className="rounded-xl px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-stone-200 transition-colors text-sm disabled:opacity-50"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
 
       {message && (
-        <div className="mb-4 p-4 rounded-xl bg-blue-950/50 border border-blue-900 text-blue-200">
+        <div className="p-4 rounded-2xl bg-blue-950/20 border border-blue-900/30 text-blue-200 text-sm">
           {message}
         </div>
       )}
 
-      <div className="space-y-6">
-        {Object.entries(categorizedSettings).map(([category, entries]) => (
-          <fieldset
+      <div className="space-y-5">
+        {categories.map((category) => (
+          <section
             key={category}
-            className="rounded-3xl border border-stone-900 bg-stone-950 p-6"
+            className="rounded-2xl border border-white/5 bg-stone-900/20 overflow-hidden"
           >
-            <legend className="text-white font-semibold px-2 flex items-center gap-2">
+            <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
                 stroke="currentColor"
-                className={`size-5 ${
-                  categoryColors[category] || 'text-stone-500'
-                }`}
+                className={`size-5 ${categoryColors[category] || 'text-stone-500'}`}
               >
                 <path
                   strokeLinecap="round"
@@ -409,101 +657,100 @@ export default function settings() {
                   d={categoryIcons[category] || categoryIcons['Features']}
                 />
               </svg>
-              {category}
-            </legend>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {entries.map(([key, value]) => {
+              <div className="text-sm font-semibold text-stone-100">
+                {category}
+              </div>
+              <div className="ml-auto text-xs text-stone-500">
+                {categorizedSettings[category]?.length || 0}
+              </div>
+            </div>
+
+            <div className="divide-y divide-white/5">
+              {(categorizedSettings[category] || []).map((key) => {
                 const meta = SETTING_METADATA[key];
+                const value = settings[key] ?? '';
+                const isSecret = meta?.type === 'password' || key.endsWith('_API_KEY') || key.includes('API_KEY');
+                const isMasked = Boolean(maskedSecrets[key]);
+                const showSetPill = isSecret && isMasked && !value;
+
+                const isBooleanSelect =
+                  meta?.type === 'select' &&
+                  meta?.options?.length === 2 &&
+                  meta.options.includes('true') &&
+                  meta.options.includes('false');
+
                 return (
-                  <div key={key} className="group">
-                    <label className="block text-sm font-medium text-stone-300 mb-2 flex items-center gap-2">
-                      {meta?.label || key}
-                      {meta?.description && (
-                        <div className="relative inline-block">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="size-4 text-stone-500 cursor-help"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
-                            />
-                          </svg>
-                          <div className="absolute left-0 top-6 w-64 p-3 bg-stone-800 border border-stone-700 rounded-lg text-xs text-stone-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-xl">
+                  <div key={key} className="px-5 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:items-start">
+                      <div className="md:col-span-5 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-medium text-stone-200">
+                            {meta?.label || key}
+                          </div>
+                          {showSetPill ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-200">
+                              set
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="text-xs font-mono text-stone-500">
+                          {key}
+                        </div>
+                        {meta?.description ? (
+                          <div className="text-xs text-stone-500 leading-relaxed">
                             {meta.description}
                           </div>
-                        </div>
-                      )}
-                    </label>
-                    {meta?.type === 'select' ? (
-                      <select
-                        value={value}
-                        onChange={(e) => handleInputChange(key, e.target.value)}
-                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2.5 text-sm text-stone-200 focus:outline-none focus:border-stone-700"
-                      >
-                        {meta.options?.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt || '(auto)'}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type={
-                          meta?.type === 'password'
-                            ? 'password'
-                            : meta?.type === 'number'
-                            ? 'number'
-                            : 'text'
-                        }
-                        value={value}
-                        onChange={(e) => handleInputChange(key, e.target.value)}
-                        placeholder={meta?.placeholder}
-                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2.5 text-sm text-stone-200 focus:outline-none focus:border-stone-700"
-                      />
-                    )}
+                        ) : null}
+                      </div>
+
+                      <div className="md:col-span-7">
+                        {meta?.type === 'select' && !isBooleanSelect ? (
+                          <select
+                            value={value}
+                            onChange={(e) => handleInputChange(key, e.target.value)}
+                            className="w-full rounded-xl bg-black/30 border border-white/10 px-3 py-2.5 text-sm text-stone-200 outline-none focus:border-white/20"
+                          >
+                            {(meta.options || []).map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        ) : isBooleanSelect ? (
+                          <label className="inline-flex items-center gap-2 select-none text-sm text-stone-200">
+                            <input
+                              type="checkbox"
+                              checked={(value || 'false') === 'true'}
+                              onChange={(e) =>
+                                handleInputChange(key, e.target.checked ? 'true' : 'false')
+                              }
+                              className="size-4 rounded border-white/20 bg-black/40"
+                            />
+                            {value === 'true' ? 'Enabled' : 'Disabled'}
+                          </label>
+                        ) : (
+                          <input
+                            type={
+                              meta?.type === 'password'
+                                ? 'password'
+                                : meta?.type === 'number'
+                                  ? 'number'
+                                  : 'text'
+                            }
+                            value={value}
+                            onChange={(e) => handleInputChange(key, e.target.value)}
+                            placeholder={meta?.placeholder}
+                            className="w-full rounded-xl bg-black/30 border border-white/10 px-3 py-2.5 text-sm text-stone-200 outline-none focus:border-white/20"
+                          />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </fieldset>
+          </section>
         ))}
-
-        <div className="flex gap-3">
-          <button
-            onClick={handlesave}
-            disabled={saving}
-            className="flex-1 rounded-full p-3 pl-4 bg-blue-600 hover:bg-blue-700 border border-blue-700 transition-colors flex items-center justify-center gap-2 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9"
-              />
-            </svg>
-            {saving ? 'Saving...' : 'Save to .env'}
-          </button>
-          <button
-            onClick={loadSettings}
-            disabled={loading}
-            className="rounded-full p-3 pl-4 border border-stone-900 hover:bg-stone-900/50 hover:text-stone-300 transition-colors text-stone-400 flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            Reload
-          </button>
-        </div>
       </div>
     </div>
   );
